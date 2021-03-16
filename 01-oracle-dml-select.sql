@@ -269,3 +269,43 @@ FROM dual;
 SELECT first_name,
     (salary + (salary * commission_pct)) * 12
 FROM employees;
+
+
+--  날짜형 단일행 함수
+SELECT sysdate FROM dual;   --  시스템 가상 테이블 -> 1개
+
+SELECT sysdate FROM employees;  --테이블 내의 레코드 갯수만큼 출력
+
+SELECT sysdate,     --  시스템 날짜
+    ADD_MONTHS(sysdate, 2), --  오늘부터 2개월 후
+    MONTHS_BETWEEN(TO_DATE('1999-12-31', 'YYYY-MM-DD'), sysdate),      --   ~개월 차
+    ROUND(sysdate, 'MONTH'),    --  날짜 반올림
+    TRUNC(sysdate, 'MONTH')    --
+FROM dual;
+
+
+--  employees 사원들의 입사 후 얼마나 지났는지 확인
+SELECT first_name, hire_date,
+    ROUND(MONTHS_BETWEEN(sysdate, hire_date), 1) as months
+FROM employees;
+
+
+----------------
+--  변환함수
+----------------
+/*
+TO_CHAR(o, fmt) :   Number of Date -> Varchar
+TO_NUMBER(s, fmt) :     Varchar -> Number
+TO_DATAE(s, fmt) :  Varchar -> Date
+*/
+
+--  TO_CHAR
+SELECT first_name,
+    TO_CHAR(hire_date, 'YYYY-MM-DD HH24:MI:SS') 입사일
+FROM employees;
+
+--  현재 시간을 년-월-일 오전/오후 시:분:초 형식으로 출력
+SELECT 
+    sysdate,
+    TO_CHAR(sysdate, 'YYYY-MM-DD PM HH:MI:SS')
+FROM dual;
