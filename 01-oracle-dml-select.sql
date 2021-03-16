@@ -309,3 +309,90 @@ SELECT
     sysdate,
     TO_CHAR(sysdate, 'YYYY-MM-DD PM HH:MI:SS')
 FROM dual;
+
+SELECT first_name,
+    TO_CHAR(salary * 12, '$999,999.99') 연봉
+FROM employees;
+
+--  TO_NUMBER : 문자열 -> 숫자정보
+SELECT 
+    TO_NUMBER('$1,500,500', '$999,999,999.99')
+FROM dual;
+
+--  TO_DATE : 날짜 형태를 지닌 문자열 -> date
+SELECT
+    '2021-03-16 15:07',
+    TO_DATE('2021-03-16 15:07', 'YYYY-MM-DD HH24:MI')
+FROM dual;
+
+/*
+날짜 연산
+    Date +(-) Number : 날짜에 일수를 더하거나 뺀다 -> Date
+    Date - Date : 두 날짜 사이의 일수
+    Date +(-) Number / 24 : 날짜에 시간을 더하거나 뺄 때 Number / 24 를 더하거나 뺀다
+*/
+SELECT TO_CHAR(sysdate, 'YYYY-MM-DD HH24:MI'),
+    TO_CHAR(sysdate - 8, 'YYYY-MM-DD HH24:MI'),     --  8일 전
+    TO_CHAR(sysdate + 8, 'YYYY-MM-DD HH24:MI'),     --  8일 후
+    sysdate - TO_DATE('1999-12-31', 'YYYY-MM-DD'),  --  1999년 12월 31일 이후 며칠이 지났는가
+    TO_CHAR(sysdate + 12/24, 'YYYY-MM-DD HH24:MI')     --  현재 시간으로부터 12시간 이후
+FROM dual;
+
+
+--  NULL 관련
+--  NULL이 산술계산에 포함되면 NULL
+--  NULL은 잘 처리해주자
+SELECT first_name,
+    salary,
+    nvl(salary * commission_pct, 0) commission      --  nvl : 첫번째 인자가 null -> 두번째 인자값을 사용한다.
+FROM employees;
+
+SELECT first_name,
+    salary,
+    nvl2(commission_pct, salary * commission_pct, 0) commission     
+    --  nvl2 : 첫번째 인자가 not null이면 두번째 인자, null이면 세번째 인자 사용
+FROM employees;
+
+
+--  CASE Function
+--  보너스를 지급
+--  AD관련 직원 -> 20%, SA관련 직원 -> 10%, IT관련 직원 -> 8%, 나머지는 3%
+
+SELECT first_name, job_id, SUBSTR(job_id, 1, 2) FROM employees;     --  JOB_ID 형태 확인
+
+SELECT first_name, job_id, SUBSTR(job_id, 1, 2) 직종, salary,
+    CASE SUBSTR(job_id, 1, 2)
+        WHEN 'AD' THEN salary * 0.2     --  IF
+        WHEN 'SA' THEN salary * 0.1     --  ELSE IF
+        WHEN 'IT' THEN salary * 0.08
+        ELSE salary * 0.03
+    END bonus
+FROM employees;
+
+--  DECODE
+SELECT first_name, job_id, SUBSTR(job_id, 1, 2) 직종, salary,
+    DECODE(SUBSTR(job_id, 1, 2),    --  비교할 값
+        'AD', salary * 0.2,         --  IF : substr(job_id 1, 2) = 'AD'
+        'SA', salary * 0.1,
+        'IT', salary * 0.08,
+        salary * 0.03) bonus        --  ELSE
+FROM employees;
+
+
+--  연습문제
+/*
+직원의 이름, 부서, 팀을 출력하세요
+    팀은 코드로 결정하며 다음과 같이 그룹 이름을 출력합니다
+    부서 코드가 10 ~ 30이면 : 'A-GROUP'
+    부서 코드가 40 ~ 50이면 : 'B-GROUP'
+    부서 코드가 60 ~ 100이면 : 'C-GROUP'
+    나머지 부서는 : 'REMAINDER'
+   */
+SELECT first_name, department_id,
+    CASE WHEN department_id >= 10 AND department_id <= 30 THEN 'A-GROUP'
+        WHEN department_id <= 50 THEN 'B-GROUP'
+        WHEN department_id <= 100 THEN 'C-GROUP'
+        ELSE 'REMAINDER'
+    END team
+FROM employees;
+    
