@@ -195,12 +195,12 @@ WHERE first_name LIKE '_a%';
 /*
 부서 번호를 오름차순으로 정렬하고 부서번호, 급여, 이름을 출력하세요
 급여가 10000 이상인 직원의 이름을 급여 내림차순 (높은 급여 -> 낮은 급여)로 출력하세요
-부서 번호, 급여, 이름 순으로 출력하되 부서번호 오름차운, 급여 내림차순으로 출력하세요
+부서 번호, 급여, 이름 순으로 출력하되 부서번호 오름차순, 급여 내림차순으로 출력하세요
 */
 --  부서 번호를 오름차순으로 정렬하고 부서번호, 급여, 이름을 출력하세요
 SELECT first_name, salary, department_id
 FROM employees
-ORDER BY department_id ASC;     --  기본 정렬리 ASC 라 생략가능 (오름차순)
+ORDER BY department_id ASC;     --  기본 정렬이 ASC 라 생략가능 (오름차순)
 
 --  급여가 10000 이상인 직원의 이름을 급여 내림차순 (높은 급여 -> 낮은 급여)로 출력하세요
 SELECT first_name, salary
@@ -208,7 +208,7 @@ FROM employees
 WHERE salary >= 10000
 ORDER BY salary DESC;
 
---  부서 번호, 급여, 이름 순으로 출력하되 부서번호 오름차운, 급여 내림차순으로 출력하세요
+--  부서 번호, 급여, 이름 순으로 출력하되 부서번호 오름차순, 급여 내림차순으로 출력하세요
 SELECT department_id, salary, first_name
 FROM employees
 ORDER BY department_id ASC, salary DESC;
@@ -396,3 +396,4 @@ SELECT first_name, department_id,
     END team
 FROM employees;
     
+
