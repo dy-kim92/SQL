@@ -68,4 +68,4 @@ SELECT first_name 이름,
     REPLACE(phone_number, '.', '-') 전화번호,
     hire_date 입사일
 FROM employees
-WHERE hire_date < '03/12/31';
+WHERE hire_date < '03/12/31'; 
