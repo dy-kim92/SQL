@@ -18,7 +18,10 @@ SELECT first_name 이름,
     commission_pct "커미션 비율",
     salary 월급
 FROM employees
-WHERE commission_pct is null AND salary > 3000;
+WHERE manager_id is not null AND 
+    commission_pct is null AND 
+    salary > 3000
+ORDER BY salary DESC;
 
 --  문제 4
 SELECT job_title 업무이름,
@@ -30,7 +33,7 @@ ORDER BY max_salary DESC;
 --  문제 5
 SELECT first_name 이름,
     salary 월급,
-    nvl2(commission_pct, commission_pct, 0) 커미션퍼센트
+    nvl(commission_pct, 0) 커미션퍼센트
 FROM employees
 WHERE 10000 <= salary  AND salary < 14000
 ORDER BY salary DESC;
@@ -47,7 +50,7 @@ WHERE department_id IN (10, 90, 100);
 SELECT first_name 이름,
     salary 월급
 FROM employees
-WHERE UPPER(first_name) LIKE '%S%' OR LOWER(first_name) LIKE '%s%';
+WHERE LOWER(first_name) LIKE '%s%';
 
 --  문제 8
 SELECT department_name 부서이름 
@@ -57,7 +60,7 @@ ORDER BY LENGTH(department_name) DESC;
 --  문제 9
 SELECT UPPER(country_id) 나라이름
 FROM countries
-ORDER BY country_id ASC;
+ORDER BY UPPER(country_id) ASC;
 
 --  문제 10
 SELECT first_name 이름,
