@@ -407,5 +407,28 @@ SELECT first_name, salary, hire_date FROM employees
 WHERE hire_date < '05/01/01' AND
     salary < 12000;
     
-    
-    
+--  RANK 함수
+SELECT salary, first_name,
+    RANK() OVER (ORDER BY salary DESC) as rank,     --  중복된 순위를 건너뛰고 순위 부여
+    DENSE_RANK() OVER (ORDER BY salary DESC) as densd_rank, --  중복순위 상관 없이 다음 순위 부여
+    ROW_NUMBER() OVER (ORDER BY salary DESC) as row_number, --  중복 여부 관계없이 차례대로 순위 부여
+    rownum      --  정렬되기 이전의 레코드 순서
+FROM employees;
+
+--  Hierarchical Query : 트리 형태의 구조를 추출
+--  ROOT 노드 : 조건 START WITH로 설정
+--  가지 : 연결하기 위한 조건을 CONNECT BY PRIOR 로 설정
+--  employees 테이블로 조직도를 그려보자
+--  level(깊이)라는 가상 컬럼을 사용할 수 있다
+SELECT level, first_name, manager_id, employee_id
+FROM employees
+START WITH manager_id IS NULL   --  ROOT 노드의 조건
+CONNECT BY PRIOR employee_id = manager_id
+ORDER BY level;
+
+--  연습문제 : 위 트리 구조에 매니저의 이름도 출력해주세요
+SELECT level, first_name, manager_id, employee_id
+FROM employees
+START WITH manager_id IS NULL   --  ROOT 노드의 조건
+CONNECT BY PRIOR employee_id = manager_id
+ORDER BY level;
