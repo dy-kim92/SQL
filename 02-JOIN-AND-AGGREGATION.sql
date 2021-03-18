@@ -213,3 +213,105 @@ FROM employees
 GROUP BY department_id      --  그룹핑
     HAVING AVG(salary) >= 7000  --  HAVING : GROUP BY 에 조건을 부여할 때 사용
 ORDER BY department_id;
+
+
+--  ROLLUP
+--  GROUP BY 절과 함께 사용
+--  GROUP BY 의 결과에 좀더 상세한 요약을 제공하는 기능 수행 (Item Subtotal)
+--  부서별 급여의 합계 추출 (부서 아이디, job_id)
+SELECT department_id,
+    job_id,
+    SUM(salary)
+FROM employees
+GROUP BY department_id, job_id
+ORDER BY department_id;
+
+SELECT department_id,
+    job_id,
+    SUM(salary)
+FROM employees
+GROUP BY ROLLUP(department_id, job_id);
+
+
+--  CUBE 함수
+--  CrossTable에 대한 Summary를 함께 제공
+--  ROLLUP 함수로 추출된 Subtotal 에
+--  Column Total 값을 추출할 수 있다
+SELECT department_id, job_id, SUM(salary)
+FROM employees
+GROUP BY CUBE(department_id, job_id);
+
+
+--------------
+--  Subquery
+--------------
+--  단일행 서브쿼리
+--  서브쿼리의 결과가 단일행인 경우, 단일행 비교 연산자를 사용 (=, >, >=, <, <=, <>)
+
+--  하나의 SQL이 다른 SQL 질의의 일부에 포함된 경우
+--  DEN 보다 급여를 많이 받는 사원의 이름과 급여는 ?
+--  1. Den 이 얼마나 급여를 받는지 - A
+--  2. A보다 많은 급여를 받는 사람은 ?
+SELECT salary FROM employees WHERE first_name = 'Den';  --  11000   : 1
+SELECT first_name, salary FROM employees WHERE salary > 11000;  --  : 2
+--  두 쿼리를 합친다
+SELECT first_name, salary FROM employees
+WHERE salary > (SELECT salary FROM employees WHERE first_name = 'Den');
+
+--  연습
+--  급여의 중앙값보다 많이 받는 직원
+--  1. 급여의 중앙값 ?
+--  2. 급여의 중앙값보다 많이 받는 직원
+SELECT MEDIAN(salary) FROM employees;               --  6200    : 1
+SELECT first_name, salary FROM employees WHERE salary > 6200; --: 2
+-- 쿼리 합치기
+SELECT first_name, salary FROM employees
+WHERE salary > (SELECT MEDIAN(salary) FROM employees);
+
+--  급여를 가장 적게 받는 사람의 이름, 급여, 사원번호를 출력하세요
+SELECT MIN(salary) FROM employees;      --  2100
+SELECT first_name, salary, employee_id
+FROM employees
+WHERE salary = 2100;
+--  쿼리 합치기
+SELECT first_name, salary, employee_id
+FROM employees
+WHERE salary = (SELECT MIN(salary) FROM employees);
+
+
+--  다중행 서브쿼리
+--  서브쿼리 결과 레코드가 두개 이상인 경우, 단순 비교 불가능
+--  집합 연산에 관련된 IN, ANY, ALL, EXSIST 등을 이용해야 한다
+
+--  110번 부서의 직원이 받는 급여는 얼마인가 ?
+SELECT salary FROM employees WHERE department_id = 110; --  레코드 갯수 : 2
+SELECT first_name, salary FROM employees
+WHERE salary = (SELECT salary FROM employees WHERE department_id = 110);    
+--  ERROR : 단일 행 하위 질의에 2개 이상의 행이 리턴
+--  2개의 결과와 단일행 salary의 값을 비교할 수 없다
+
+--  Fix
+SELECT first_name, salary FROM employees
+WHERE salary IN (SELECT salary FROM employees WHERE department_id = 110);       --  IN
+
+SELECT first_name, salary FROM employees
+WHERE salary = ANY (SELECT salary FROM employees WHERE department_id = 110);    --  ANY
+--  IN, ANY  ->  OR 와 비슷함
+
+SELECT first_name, salary FROM employees
+WHERE salary > ALL (SELECT salary FROM employees WHERE department_id = 110);    --  ALL
+--  ALL ->  AND 와 비슷함
+
+SELECT first_name, salary FROM employees
+WHERE salary > ANY (SELECT salary FROM employees WHERE department_id = 110);
+--  salary > 12000 OR salary > 8300  ->  동일함
+
+--  Correlated Query
+--  포함한 쿼리 (Outer Query), 포함된 쿼리 (Inner Query)가 서로 연관관계를 맺는 쿼리
+SELECT first_name, salary, department_id
+FROM employees outer    --  outer 쿼리
+WHERE salary > (SELECT AVG(salary) FROM employees
+                WHERE department_id = outer.department_id);
+--  의미 : 사원 목록을 추출하되, 자신이 속한 부서의 평균 급여보다 많이 받는 직원 추출
+--  서브쿼리(INNER)가 수행되기 위해 OUTER의 컬럼값이 필요하고
+--  OUTER 쿼리 수행이 완료되기 위해서는 서브쿼리(INNER)의 결과값이 필요함
