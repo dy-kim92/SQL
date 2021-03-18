@@ -315,3 +315,97 @@ WHERE salary > (SELECT AVG(salary) FROM employees
 --  의미 : 사원 목록을 추출하되, 자신이 속한 부서의 평균 급여보다 많이 받는 직원 추출
 --  서브쿼리(INNER)가 수행되기 위해 OUTER의 컬럼값이 필요하고
 --  OUTER 쿼리 수행이 완료되기 위해서는 서브쿼리(INNER)의 결과값이 필요함
+
+--  연습 : 각 부서별로 최고급여를 받는 사원
+SELECT department_id, MAX(salary) FROM employees GROUP BY department_id;
+
+--  1. 조건절에서 비교
+SELECT department_id, employee_id, first_name, salary
+FROM employees
+WHERE (department_id, salary) IN (SELECT department_id, MAX(salary)
+                                    FROM employees
+                                    GROUP BY department_id)
+ORDER BY department_id;
+
+--  SUBQUERY : 임시 테이블을 생성
+--  2. 부서별 최고 급여 테이블을 임시로 생성해서 테이블과 조인하는 방법
+SELECT emp.department_id, employee_id, first_name, emp.salary
+FROM employees emp, (SELECT department_id, MAX(salary) salary
+                        FROM employees
+                        GROUP BY department_id) sal --  임시테이블 sal
+WHERE emp.department_id = sal.department_id AND
+    emp.salary = sal.salary
+ORDER BY emp.department_id;
+
+--  3. Correlatedd Query 활용
+SELECT emp.department_id, employee_id, first_name, emp.salary
+FROM employees emp
+WHERE emp.salary = (SELECT MAX(salary) FROM employees
+                    WHERE department_id = emp.department_id)
+ORDER BY emp.department_id;
+
+
+-----------------
+--  TOP K Query
+-----------------
+--  Oracle은 질의 수행 결과의 행번호를 확인할 수 있는 가상 컬럼 rownum을 제공
+
+--  2007년 입사자 중에서 급여 순위 5위까지 뽑기
+SELECT rownum, first_name, salary
+FROM employees;     --  OK
+
+SELECT rownum, first_name, salary
+FROM employees
+WHERE hire_date LIKE '07%' AND rownum <= 5;
+
+SELECT rownum, first_name, salary
+FROM employees
+WHERE hire_date LIKE '07%' AND rownum <= 5
+ORDER BY salary DESC;       --  rownum 이 정해진 이후 정렬을 수행
+
+--  TOP K 쿼리
+SELECT rownum, first_name, salary
+FROM (SELECT * FROM employees
+        WHERE hire_date LIKE '07%'
+        ORDER BY salary DESC)
+WHERE rownum <= 5;
+
+
+--  SET (집합)
+--  UNION(합집합 : 중복제거), UNION ALL(합집합 : 중복제거 안함)
+--  INTERSECT(교집합), MINUS(차집합)
+SELECT first_name, salary, hire_date FROM employees WHERE hire_date < '05/01/01';   --  24
+SELECT first_name, salary, hire_date FROM employees WHERE salary > 12000;           --  8
+
+--  교집합 : INTERSECT
+SELECT first_name, salary, hire_date FROM employees WHERE hire_date < '05/01/01'
+INTERSECT
+SELECT first_name, salary, hire_date FROM employees WHERE salary > 12000; 
+
+--  위의 것과 같은 의미
+SELECT first_name, salary, hire_date FROM employees
+WHERE hire_date < '05/01/01' AND
+    salary > 12000;
+
+--  합집합 : UNION
+SELECT first_name, salary, hire_date FROM employees WHERE hire_date < '05/01/01'
+UNION
+SELECT first_name, salary, hire_date FROM employees WHERE salary > 12000; 
+
+--  위의 것과 같은 의미
+SELECT first_name, salary, hire_date FROM employees
+WHERE hire_date < '05/01/01' OR
+    salary > 12000;
+    
+--  차집합 : MINUS
+SELECT first_name, salary, hire_date FROM employees WHERE hire_date < '05/01/01'
+MINUS
+SELECT first_name, salary, hire_date FROM employees WHERE salary > 12000; 
+
+--  입사일이 05/01/01 이전인 사람들 중 급여가 12000 이하인 직원들
+SELECT first_name, salary, hire_date FROM employees
+WHERE hire_date < '05/01/01' AND
+    salary < 12000;
+    
+    
+    
