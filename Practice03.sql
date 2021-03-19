@@ -9,10 +9,23 @@ SELECT emp.employee_id, emp.first_name, emp.last_name,
     dept.department_name
 FROM employees emp, departments dept
 WHERE emp.department_id = dept.department_id
-ORDER BY dept.department_name;
+ORDER BY dept.department_name, 
+    emp.employees_id DESC;
 
+
+--  NATURAL JOIN 으로는 불가
+--  employees, departments
 SELECT employee_id, first_name, last_name, department_name
 FROM employees NATURAL JOIN departments;    --  NATURAL JOIN
+--  아래 쿼리와 동일
+SELECT employee_id, emp.first_name, emp.last_name,
+    dept.department_name
+FROM employees emp, departments dept
+WHERE emp.department_id = dept.department_id
+ORDER BY dept.department_name,
+    emp.employee_id DESC;
+
+
 /*
 문제2.
 employees 테이블의 job_id는 현재의 업무아이디를 가지고 있습니다.

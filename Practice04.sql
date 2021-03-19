@@ -16,6 +16,21 @@ WHERE salary < (SELECT AVG(salary) FROM employees);
 순으로 정렬하여 출력하세요
 (51건)
 */
+--  평균급여, 최대급여 쿼리 -> 서브쿼리 -> 임시테이블
+--  두 테이블을 Theta JOIN
+SELECT ROUND(AVG(salary), 0) avgSalary,
+    MAX(salary) maxSalary
+FROM employees;  --  임시 테이블로 활용할 쿼리
+SELECT employee_id, first_name, salary, avgSalary, maxSalary
+FROM employees emp, (SELECT ROUND(AVG(salary), 0) avgSalary,
+                            MAX(salary) maxSalary
+                            FROM employees) t
+WHERE emp.salary between t.avgSalary and t.manSalary
+ORDER BY salary asc;
+
+
+
+
 SELECT employee_id, first_name, salary 
 FROM employees
 WHERE salary >= (SELECT AVG(salary) FROM employees) AND
@@ -30,6 +45,22 @@ ORDER BY salary;
 (state_province), 나라아이디(country_id) 를 출력하세요
 (1건)
 */
+SELECT department_id FROM employees WHERE first_name = 'Steven' AND last_name = 'King';
+SELECT location_id FROM departments WHERE department_id = 90;
+SELECT location_id, city FROM locations WHERE location_id = 1700;
+
+--  최종쿼리
+SELECT location_id, street_address, postal_code, city, state_province, country_id
+FROM locations
+WHERE location_id = (SELECT location_id
+                        FROM departments
+                        WHERE department_id = (SELECT department_id
+                                                FROM employees
+                                                WHERE first_name = 'Steven' AND
+                                                    last_name = 'King')
+                    );
+
+----------------------
 SELECT loc.location_id, loc.street_address, loc.postal_code, loc.city, loc.state_province, loc.country_id
 FROM locations loc, countries con, departments dept, employees emp
 WHERE emp.department_id = dept.department_id AND
@@ -40,11 +71,13 @@ WHERE emp.department_id = dept.department_id AND
 /*
 문제4.
 job_id 가 'ST_MAN' 인 직원의 급여보다 작은 직원의 사번,이름,급여를 급여의 내림차순으로
-출력하세요 -ANY연산자 사용
-(74건)
+출력하세요 -ALL연산자 사용
+(49건)
 */
+SELECT salary FROM employees WHERE job_id = 'ST_MAN';   --  Multiline Subquery
+-------------
 SELECT employee_id, first_name, salary FROM employees
-WHERE salary < ANY (SELECT salary FROM employees WHERE job_id = 'ST_MAN')
+WHERE salary < ALL (SELECT salary FROM employees WHERE job_id = 'ST_MAN')
 ORDER BY salary DESC;
 
 /*
@@ -55,11 +88,25 @@ ORDER BY salary DESC;
 조건절비교, 테이블조인 2가지 방법으로 작성하세요
 (11건)
 */
+--  조건절 비교
+--  부서별 최고 급여를 받는 쿼리 (department_id, 최대급여)
+--  IN
+SELECT department_id, MAX(salary) FROM employees GROUP BY department_id;    --  부서별 최고 급여
+
 SELECT employee_id, first_name, salary, department_id
 FROM employees
 WHERE (department_id, salary) IN (SELECT department_id, MAX(salary)
                                     FROM employees
                                     GROUP BY department_id)
+ORDER BY salary DESC;
+
+-- 테이블 조인
+SELECT employee_id, first_name, emp.salary, emp.department_id
+FROM employees emp, (SELECT department_id, MAX(salary) salary
+                      FROM employees
+                      GROUP BY department_id) t
+WHERE emp.salary = t.salary AND
+    emp.department_id = t.department_id
 ORDER BY salary DESC;
 
 /*
@@ -68,10 +115,22 @@ ORDER BY salary DESC;
 연봉 총합이 가장 높은 업무부터 업무명(job_title)과 연봉 총합을 조회하시오
 (19건)
 */
-SELECT job_title, SUM(salary)
+SELECT job_id, SUM(salary) sumSalary
+FROM employees
+GROUP BY job_id;
+
+SELECT j.job_title, t.sumSalary, t.job_id, j.job_id
+FROM jobs j, (SELECT job_id, SUM(salary) sumSalary
+                FROM employees
+                GROUP BY job_id) t
+WHERE j.job_id = t.job_id
+ORDER BY sumSalary DESC;
+
+SELECT job_title, SUM(salary) salary
 FROM jobs, employees emp
 WHERE   emp.job_id = jobs.job_id
-GROUP BY job_title;
+GROUP BY job_title
+ORDER BY salary DESC;
 
 /*
 문제7.
@@ -79,6 +138,18 @@ GROUP BY job_title;
 (first_name)과 급여(salary)을 조회하세요
 (38건)
 */
+SELECT department_id, AVG(salary) salary
+FROM employees
+GROUP BY department_id;
+
+SELECT employee_id, first_name, emp.salary
+FROM employees emp, (SELECT department_id, AVG(salary) salary
+                        FROM employees
+                        GROUP BY department_id) t
+WHERE emp.department_id = t.department_id AND
+    emp.salary > t.salary;
+
+----------------------
 SELECT employee_id, first_name, salary
 FROM employees outer
 WHERE salary > (SELECT AVG(salary) FROM employees 
@@ -89,7 +160,23 @@ WHERE salary > (SELECT AVG(salary) FROM employees
 직원 입사일이 11번째에서 15번째의 직원의 사번, 이름, 급여, 입사일을 입사일 순서로 출력
 하세요
 */
+--  입사일 순 정렬 쿼리
+SELECT employee_id, first_name, salary, hire_date FROM employees ORDER BY hire_date;
+SELECT rownum rn, employee_id, first_name, salary, hire_date FROM (
+    SELECT employee_id, first_name, salary, hire_date FROM employees ORDER BY hire_date
+    );
+    
+SELECT rn, employee_id, first_name, salary, hire_date FROM (
+    SELECT rownum rn, employee_id, first_name, salary, hire_date FROM (
+        SELECT employee_id, first_name, salary, hire_date FROM employees ORDER BY hire_date
+        )
+    )
+WHERE rn BETWEEN 11 AND 15;
+
+
+
 SELECT ROW_NUMBER() OVER (ORDER BY hire_date DESC) as RN,
     employee_id, first_name, salary, hire_date
 FROM employees
 WHERE RN BETWEEN 11 AND 15; 
+
