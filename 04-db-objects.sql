@@ -89,3 +89,98 @@ SELECT * FROM user_views;
 SELECT * FROM book;
 SELECT * FROM author;
 
+
+---------------
+--  INDEX
+---------------
+
+--  레코드 검색 속도 향상을 위한 색인 작업
+--  WHERE 절의 조건에서 사용되는 필드
+--  JOIN 의 조건으로 사용되는 필드에 적용하면
+--  검색 속도를 높일 수 있다
+
+CREATE TABLE s_emp
+    AS SELECT * FROM hr.employees;
+    
+--  인덱스의 확인
+SELECT * FROM user_indexes;
+
+--  s_emp 테이블 employee_id 컬럼에 UNIQUE 인덱스를 생성해 보자
+CREATE UNIQUE INDEX s_emp_id_pk     --  인덱스 이름
+    ON s_emp (employee_id);
+    
+SELECT * FROM user_indexes;
+
+--  어떤 인덱스가 어느 컬럼에 걸려있는지 확인
+SELECT * FROM user_ind_columns;
+
+SELECT t.index_name, t.table_name, c.column_name, c.column_position
+FROM user_indexes t, user_ind_columns c
+WHERE t.index_name = c.index_name AND
+    t.table_name = 'S_EMP';
+    
+--  인덱스 삭제
+DROP INDEX s_emp_id_pk;
+SELECT * FROM user_indexes;
+
+
+
+---------------
+--  SEQUENCE
+---------------
+
+--  만약 author 테이블에 새 레코드를 추가해야 한다면
+SELECT * FROM author;
+
+--  중복되지 않는 PK를 얻어와야 한다
+INSERT INTO author(author_id, author_name)
+    VALUES(
+    (SELECT MAX(author_id) + 1 FROM author), '스티븐 킹');
+
+SELECT * FROM author;
+--  위 방식은 안전하지 않음
+ROLLBACK;
+
+SELECT MAX(author_id) + 1 FROM author;
+--  시퀀스 생성
+CREATE SEQUENCE seq_author_id
+    START WITH 3    --  3부터 추출
+    INCREMENT BY 1  --  1씩 증가
+    MAXVALUE 1000000;   --  최대값 100만
+
+--  시퀀스를 이용한 INSERT(PK)
+INSERT INTO author(author_id, author_name)
+VALUES(seq_author_id.NEXTVAL,   --  SEQUENCE에서 중복되지 않는 정수를 생성
+    '스티븐 킹');
+    
+SELECT * FROM author;
+
+--  새 시퀀스 작성
+CREATE SEQUENCE my_seq
+    START WITH 1
+    INCREMENT BY 1
+    MAXVALUE 10;
+    
+--  NEXTVAL, CURRVAL 가상 컬럼을 이용
+SELECT my_seq.NEXTVAL FROM dual;    --  새 값의 추출 (증가)
+SELECT my_seq.CURRVAL FROM dual;    --  현재 시퀀스의 값 확인 (증가 안함)
+
+--  시퀀스 수정
+ALTER SEQUENCE my_seq
+    INCREMENT BY 2  --  증가값을 2로 변경
+    MAXVALUE 1000000;
+
+SELECT my_seq.NEXTVAL FROM dual;
+
+--  시퀀스를 위한 딕셔너리
+SELECT * FROM user_sequences;
+SELECT object_name FROM user_objects
+WHERE object_type = 'SEQUENCE';
+
+--  시퀀스의 삭제
+DROP SEQUENCE my_seq;
+SELECT * FROM user_sequences;
+
+
+
+
